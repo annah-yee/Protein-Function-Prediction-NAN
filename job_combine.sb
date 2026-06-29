@@ -1,0 +1,15 @@
+#!/bin/bash --login
+##SBATCH -C [agx|agg|nal|neh|nfh|nif|nvf|nel]
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=16G
+#SBATCH --time=0:20:0
+#SBATCH --output=slurm_logs/combinejob_output_%j.out
+
+cd $SLURM_SUBMIT_DIR
+
+module purge
+module load SciPy-bundle/2025.07-gfbf-2025b
+
+python3 nan_combine.py

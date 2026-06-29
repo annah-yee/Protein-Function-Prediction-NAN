@@ -1,0 +1,18 @@
+#!/bin/bash --login
+#SBATCH --job-name=nan_predictions
+##SBATCH -C [agx|agg|nal|neh|nfh|nif|nvf|nel]
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16G
+#SBATCH --time=4:0:0
+#SBATCH --array=0-999%500
+#SBATCH --output=slurm_logs/job_output_%A_%a.out
+
+cd $SLURM_SUBMIT_DIR
+
+module purge
+module load Miniforge3/25.11.0-1
+module load InterProScan
+
+/mnt/home/f0113804/.conda/envs/mvtdl/bin/python3 nan_prediction.py

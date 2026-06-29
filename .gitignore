@@ -1,2 +1,4 @@
 my_interproscan/
 Protein-Function-Prediction/
+/*.csv
+/*.tsv
