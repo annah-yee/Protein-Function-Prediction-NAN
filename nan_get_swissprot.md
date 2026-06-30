@@ -1,12 +1,21 @@
-# In order to retrieve the protein sequences and their uniprot annotations,
-# must download all the reviewed SwissProt entries in tsv format
+# Getting SwissProt Data
+## Download tsv file
+Before all of this, you have to make sure you have the swiss prot data downloaded
+1. go to https://www.uniprot.org/uniprotkb?facets=reviewed%3Atrue&query=* 
+2. customize columns to include entry name, entry, sequence, gene ontology IDs, and data of last modification
+3. download all as a TSV file, not compressed
 
-''' This file contains the tools to convert the SwissProt tsv into xxx
-    and clean it up a bit'''
+## Import requirements
 
+```python
 import pandas as pd
 import ast
+```
+## Generate csv files
 
+Using the code below, insert the name of your tsv file and run `create_chonk()`. Two csv files are generated: annotated and codensed versions of the data. 
+
+```python
 def deduplicate_go_terms(val):
     try:
         terms = ast.literal_eval(val)
@@ -29,9 +38,7 @@ def return_annotated(df):
     return df[mask]
 
 def create_chonk():
-    
-    # normal tsv parsing and column renaming
-    df = pd.read_csv("uniprotkb_AND_reviewed_true_2025_06_29.tsv", sep='\t')
+    df = pd.read_csv(<YOUR_TSV>, sep='\t')    # replace with name of your tsv file
     df["go_terms"] = df["Gene Ontology IDs"].str.split("; ")
     df = df.drop(columns=['Gene Ontology IDs'])
     df = df.rename(columns={'Entry':'uniprot_id', 
@@ -49,7 +56,7 @@ def create_chonk():
     # condensed just includes the uniprot id and sequence. this is the model input
     condensed_df = annotated_df[['uniprot_id','sequence']]
     condensed_df.to_csv("condensed_swissprotkb.csv", index=False)
+```
 
-
-if __name__ == "__main__":
-    create_chonk()
+## Where to go from here? 
+Using the condensed csv file, start running those bad boys through the hpcc #insertlink?

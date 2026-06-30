@@ -8,6 +8,7 @@ import time
 from tqdm import tqdm
 
 '''Meant to be ran by big_job.sb eventually running all proteins through in chunks of 90'''
+'''Essentially a tweaked version of the original prediction.py to work for the HPCC'''
 
 tqdm.pandas()
 

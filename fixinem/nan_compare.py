@@ -11,24 +11,12 @@ from tqdm import tqdm
 import matplotlib.gridspec as gridspec
 
 '''Global things'''
-tqdm.pandas()
+tqdm.pandas()       # allow for progress tracking
 
-with open("go_cache.pkl", "rb") as f:
+with open("go_cache.pkl", "rb") as f:       # holds information about each go_term
         cache = pickle.load(f)
 
 '''Some tools to work with the data'''
-
-def find_missing():
-    '''Find what outputs are missing'''
-
-    files = os.listdir('/tank/anna/Protein-Function-Prediction/outputs')
-    numbers = sorted(int(re.search(r'_(\d+)\.csv$', f).group(1)) for f in files if re.search(r'_(\d+)\.csv$', f))
-
-    full_range = set(range(numbers[0], numbers[-1] + 1))
-    missing = sorted(full_range - set(numbers))
-
-    print(missing)
-
 
 def clean_csv(file):
     '''Remove all rows where prediction skipped, do this after merging'''
@@ -37,19 +25,17 @@ def clean_csv(file):
     df_clean = df[~df['predictions'].str.contains('SKIPPED:', case=False, na=False)]
     df_waste = df[df['predictions'].str.contains('SKIPPED:', case=False, na=False)]
     df_clean.to_csv('cleaned_anew.csv', index=False)
-    df_waste.to_csv('waste_anew.csv', index=False)       # waste.csv to gather all protiens that got skipped
+    df_waste.to_csv('waste_anew.csv', index=False)       # waste.csv to gather all proteins that got skipped
 
 # clean_csv('merged_anew.csv')
 
 def merge(quick_data, prediction_data):
-    '''Merges data from AlphaFunctor outputs and quick_go'''
+    '''Merges data from AlphaFunctor outputs and UniProt annotations'''
 
     main_data = pd.read_csv(quick_data, sep=',')
     predictions = pd.read_csv(prediction_data, sep=',')
     merged_data = pd.merge(main_data, predictions[['uniprot_id', 'predictions']], on='uniprot_id', how='left')
     merged_data.to_csv('merged_anew.csv', index=False)
-
-# merge('anew_chonker.csv', 'final_output.csv')
 
 '''Basic analysis things'''
 

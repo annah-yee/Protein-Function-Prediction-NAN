@@ -15,4 +15,4 @@ module purge
 module load Miniforge3/25.11.0-1
 module load InterProScan
 
-/mnt/home/f0113804/.conda/envs/mvtdl/bin/python3 nan_prediction.py
+python3 nan_prediction.py

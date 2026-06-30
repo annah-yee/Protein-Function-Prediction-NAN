@@ -1,4 +1,5 @@
 #!/bin/bash --login
+#SBATCH --job-name=nan_combine
 ##SBATCH -C [agx|agg|nal|neh|nfh|nif|nvf|nel]
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
