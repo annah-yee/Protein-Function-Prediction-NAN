@@ -6,6 +6,7 @@
 
 import pandas as pd
 import ast
+import argparse
 
 
 def deduplicate_go_terms(val):
@@ -31,15 +32,19 @@ def return_annotated(df):
 
 def create_chonk():
 
+    # allow input
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", type=str, required=True)
+    args = parser.parse_args()
+    tsv = args.f
+
     # normal tsv parsing and column renaming
-    # replace with the name of your file if you want to redo this
-    df = pd.read_csv('uniprotkb_AND_reviewed_true_2026_06_29.tsv', sep='\t')
+    df = pd.read_csv(tsv, sep='\t')
     df["go_terms"] = df["Gene Ontology IDs"].str.split("; ")
     df = df.drop(columns=['Gene Ontology IDs'])
     df = df.rename(columns={'Entry':'uniprot_id', 
                             'Entry Name':'entry_name',
                             'Date of last modification':'date_mod',
-                            'Reviewed':'reviewed',
                             'Sequence':'sequence',
                             })
     
@@ -56,8 +61,3 @@ def create_chonk():
 
 if __name__ == "__main__":
     create_chonk()
-
-
-# like how streamlined do we want this to be?
-# want to be able to do this whole process starting at a new uniprotkb file and getting out
-# all the options? oh man
