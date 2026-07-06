@@ -17,6 +17,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, recall_sco
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import matplotlib.gridspec as gridspec
+from nan_tools import plot_confusion
 ```
 
 ## Merge and clean the data
@@ -93,7 +94,7 @@ def basic_stats_namesplit(row):
 ```
 
 ```python
-def basic_analysis(data):
+def basic_analysis(data, plot):
     '''Calculate tp, fp, fn, and additional statistics for merged data.
         Shows single raw confusion matrix.'''
     
@@ -101,8 +102,7 @@ def basic_analysis(data):
     stats = merged_data.progress_apply(basic_stats, axis=1)
     merged_data = pd.concat([merged_data, stats], axis=1)
     
-    merged_data.to_csv('basic_merged_anew.csv', index=False)
-
+    merged_data.to_csv('basic_stats_data.csv', index=False)
 
     tp = int(merged_data["tp"].sum())
     fp = int(merged_data["fp"].sum())
@@ -115,33 +115,15 @@ def basic_analysis(data):
     recall = recall_score(y_true, y_pred)
     f1 = f1_score(y_true, y_pred)
 
-    print(f"Precision: {precision:.4f}")
-    print(f"Recall: {recall:.4f}")
-    print(f"f1: {f1:.4f}")
+    metrics = {"tp": tp, 
+                "fp": fp,
+                "fn": fn,
+                "precision": precision,
+                "recall": recall,
+                "f1": f1}
 
-    fig, axes = plt.subplots(1, 2, figsize=(15, 8))
-    fig.suptitle("AlphaFunctor Predictions", fontsize=14)
-
-    con_raw = confusion_matrix(y_true, y_pred)
-    con_disp_raw = ConfusionMatrixDisplay(con_raw, display_labels=["Negative", "Positive"])
-    con_disp_raw.plot(ax=axes[0], values_format='d')
-    axes[0].set_title("Raw Counts")
-    axes[0].set_xlabel("AlphaFunctor Prediction")
-    axes[0].set_ylabel("UniProt Annotation")
-
-    con_norm = confusion_matrix(y_true, y_pred, normalize='all')
-    con_disp_norm = ConfusionMatrixDisplay(con_norm, display_labels=["Negative", "Positive"])
-    con_disp_norm.plot(ax=axes[1], values_format='.2f')
-    axes[1].set_title("Normalized")
-    axes[1].set_xlabel("AlphaFunctor Prediction")
-    axes[1].set_ylabel("UniProt Annotation")
-
-    plt.figtext(0.5, 0.03, f"Precision: {precision:.4f} | Recall: {recall:.4f} | F1: {f1:.4f}", 
-         ha='center', fontsize=11)
-    plt.tight_layout(rect=[0, 0.08, 1, 0.95])
-    plt.subplots_adjust(bottom=0.15)
-    plt.savefig("basic_stats_anew.png", bbox_inches="tight")
-    plt.show()
+    if plot:
+        plot_confusion(metrics, comparison = "UniProt") # may change to QuickGo
 ```
 
 ```python

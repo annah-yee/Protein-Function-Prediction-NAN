@@ -3,12 +3,14 @@ from goatools.obo_parser import GODag
 import pandas as pd
 import ast
 import sklearn as sk
-from sklearn.metrics import confusion_matrix, classification_report, ConfusionMatrixDisplay, recall_score,precision_score, f1_score
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, recall_score,precision_score, f1_score
 import matplotlib.pyplot as plt
 import os
 import re
 from tqdm import tqdm
 import matplotlib.gridspec as gridspec
+from nan_tools import plot_confusion
+
 
 '''Global things'''
 tqdm.pandas()       # allow for progress tracking
@@ -18,24 +20,27 @@ with open("go_cache.pkl", "rb") as f:       # holds information about each go_te
 
 '''Some tools to work with the data'''
 
-def clean_csv(file):
-    '''Remove all rows where prediction skipped, do this after merging'''
-
-    df = pd.read_csv(file)
-    df_clean = df[~df['predictions'].str.contains('SKIPPED:', case=False, na=False)]
-    df_waste = df[df['predictions'].str.contains('SKIPPED:', case=False, na=False)]
-    df_clean.to_csv('cleaned_anew.csv', index=False)
-    df_waste.to_csv('waste_anew.csv', index=False)       # waste.csv to gather all proteins that got skipped
-
-# clean_csv('merged_anew.csv')
-
 def merge(quick_data, prediction_data):
     '''Merges data from AlphaFunctor outputs and UniProt annotations'''
 
     main_data = pd.read_csv(quick_data, sep=',')
     predictions = pd.read_csv(prediction_data, sep=',')
     merged_data = pd.merge(main_data, predictions[['uniprot_id', 'predictions']], on='uniprot_id', how='left')
-    merged_data.to_csv('merged_anew.csv', index=False)
+    merged_data.to_csv('merged_data_quick.csv', index=False)
+
+
+def clean_csv(file):
+    '''Remove all rows where prediction skipped, do this after merging'''
+
+    df = pd.read_csv(file)
+    df_clean = df[~df['predictions'].str.contains('SKIPPED:', case=False, na=False)]
+    df_waste = df[df['predictions'].str.contains('SKIPPED:', case=False, na=False)]
+    df_clean.to_csv('cleaned_data_quick.csv', index=False)
+    df_waste.to_csv('waste_data_quick.csv', index=False)       # waste.csv to gather all proteins that got skipped
+
+# merge the annoated kb and the alphafunctor outputs, then clean the data
+# merge("annotated_swissprotkb.csv", "alphafunctor_output.csv")
+# clean_csv('merged_data.csv')
 
 '''Basic analysis things'''
 
@@ -108,7 +113,7 @@ def basic_stats_namesplit(row):
         # there might be a better option than pass here
         pass
 
-def basic_analysis(data):
+def basic_analysis(data, plot):
     '''Calculate tp, fp, fn, and additional statistics for merged data.
         Shows single raw confusion matrix.'''
     
@@ -116,8 +121,7 @@ def basic_analysis(data):
     stats = merged_data.progress_apply(basic_stats, axis=1)
     merged_data = pd.concat([merged_data, stats], axis=1)
     
-    merged_data.to_csv('basic_merged_anew.csv', index=False)
-
+    merged_data.to_csv('basic_stats_data.csv', index=False)
 
     tp = int(merged_data["tp"].sum())
     fp = int(merged_data["fp"].sum())
@@ -130,35 +134,17 @@ def basic_analysis(data):
     recall = recall_score(y_true, y_pred)
     f1 = f1_score(y_true, y_pred)
 
-    print(f"Precision: {precision:.4f}")
-    print(f"Recall: {recall:.4f}")
-    print(f"f1: {f1:.4f}")
+    metrics = {"tp": tp, 
+                "fp": fp,
+                "fn": fn,
+                "precision": precision,
+                "recall": recall,
+                "f1": f1}
 
-    fig, axes = plt.subplots(1, 2, figsize=(15, 8))
-    fig.suptitle("AlphaFunctor Predictions", fontsize=14)
+    if plot:
+        plot_confusion(metrics, comparison = "UniProt") # may change to QuickGo
 
-    con_raw = confusion_matrix(y_true, y_pred)
-    con_disp_raw = ConfusionMatrixDisplay(con_raw, display_labels=["Negative", "Positive"])
-    con_disp_raw.plot(ax=axes[0], values_format='d')
-    axes[0].set_title("Raw Counts")
-    axes[0].set_xlabel("AlphaFunctor Prediction")
-    axes[0].set_ylabel("UniProt Annotation")
-
-    con_norm = confusion_matrix(y_true, y_pred, normalize='all')
-    con_disp_norm = ConfusionMatrixDisplay(con_norm, display_labels=["Negative", "Positive"])
-    con_disp_norm.plot(ax=axes[1], values_format='.2f')
-    axes[1].set_title("Normalized")
-    axes[1].set_xlabel("AlphaFunctor Prediction")
-    axes[1].set_ylabel("UniProt Annotation")
-
-    plt.figtext(0.5, 0.03, f"Precision: {precision:.4f} | Recall: {recall:.4f} | F1: {f1:.4f}", 
-         ha='center', fontsize=11)
-    plt.tight_layout(rect=[0, 0.08, 1, 0.95])
-    plt.subplots_adjust(bottom=0.15)
-    plt.savefig("basic_stats_anew.png", bbox_inches="tight")
-    plt.show()
-
-# basic_analysis('merged_anew.csv')
+basic_analysis('cleaned_data.csv', plot=True)
 
 def basic_name_analysis(data):
     '''Calculate tp, fp, fn, and additional statistics for merged data seperated by namespace.

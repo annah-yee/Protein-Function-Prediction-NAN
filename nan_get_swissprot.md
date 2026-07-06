@@ -58,5 +58,87 @@ def create_chonk():
     condensed_df.to_csv("condensed_swissprotkb.csv", index=False)
 ```
 
+Wanna grab the quick go stuff too? 
+
+first import these requirements
+``` python
+import time
+import os
+import requests
+from datetime import datetime
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+```
+```python
+def GO_fetch(ids, batch_size):
+    session = requests.Session()
+    retry = Retry(
+            total=5,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET"]
+        )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+        
+    session.headers.update({"User-Agent": "GOFetchScript/1.0"})
+
+    results = {}
+
+    for pid in ids:
+        results[pid] = []
+    batches = [ids[i:i+batch_size] for i in range(0, len(ids), batch_size)]
+    url = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
+    headers = {"Accept": "application/json"}
+
+    for i, batch in enumerate(batches, 1):
+        batch_ids = ",".join([f'UniProtKB:{id}' for id in batch])
+        params = {
+            "geneProductId": batch_ids,
+            "limit": 100,
+            "page": 1,
+        }
+
+        while True:
+            try:
+                response = session.get(
+                                        url,
+                                        params=params,
+                                        headers=headers,
+                                        timeout=30)
+            except requests.exceptions.ConnectionError as e:
+                print(f"Connection error on batch {i}, page {params['page']}: {e}. Retrying in 10s...")
+                time.sleep(10)
+                continue
+            data = response.json()
+            for result in data.get("results", []):
+                pid = result["geneProductId"].split(":")[1]
+                goId = result.get("goId")
+                results.setdefault(pid, []).append(goId)
+            page_info = data.get("pageInfo", {})
+            if params["page"] >= page_info.get("total", 1):
+                break
+            params["page"] += 1
+
+        time.sleep(0.5)
+        print(f'Completed batch {i}/{len(batches)} <3')
+
+    session.close()
+
+    return results           
+
+def create_quick():
+    print("And so it begins . . .")
+    df = pd.read_csv("condensed_swissprotkb.csv")
+
+    ids = list(df["uniprot_id"])
+
+    ball = GO_fetch(ids, batch_size=240)
+    
+    df["go_terms"] = df["uniprot_id"].map(ball)
+    
+    df.to_csv("quickgo.csv", index=False)
+```
 ## Where to go from here? 
 Using the condensed csv file, start running those bad boys through the hpcc #insertlink?
