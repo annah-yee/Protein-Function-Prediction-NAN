@@ -94,3 +94,22 @@ def plot_confusion(metrics, comparison):
 
     plt.savefig(f"{comparison}_confusion.png", bbox_inches="tight")
     plt.savefig(f"{comparison}_confusion.pdf", bbox_inches="tight")
+
+import os
+from collections import Counter
+
+def find_missing():
+    # this will hopefully find what outputs we're missing
+    files = os.listdir('/outputs')
+    numbers = sorted(int(re.search(r'_(\d+)\.csv$', f).group(1)) for f in files if re.search(r'_(\d+)\.csv$', f))
+
+    full_range = set(range(numbers[0], numbers[-1] + 1))
+    missing = sorted(full_range - set(numbers))
+    counts = Counter(numbers)
+    duplicates = sorted(n for n, c in counts.items() if c > 1)
+    
+    print(f"Missing: {missing}")
+    print(len(missing))
+    print(f"Duplicates: {duplicates}")
+
+find_missing()
