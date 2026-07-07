@@ -112,4 +112,4 @@ def find_missing():
     print(len(missing))
     print(f"Duplicates: {duplicates}")
 
-find_missing()
+# find_missing()

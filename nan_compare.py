@@ -39,8 +39,8 @@ def clean_csv(file):
     df_waste.to_csv('waste_data_quick.csv', index=False)       # waste.csv to gather all proteins that got skipped
 
 # merge the annoated kb and the alphafunctor outputs, then clean the data
-# merge("annotated_swissprotkb.csv", "alphafunctor_output.csv")
-# clean_csv('merged_data.csv')
+# merge("quickgo.csv", "alphafunctor_output.csv")
+# clean_csv('merged_data_quick.csv')
 
 '''Basic analysis things'''
 
@@ -121,7 +121,7 @@ def basic_analysis(data, plot):
     stats = merged_data.progress_apply(basic_stats, axis=1)
     merged_data = pd.concat([merged_data, stats], axis=1)
     
-    merged_data.to_csv('basic_stats_data.csv', index=False)
+    merged_data.to_csv('basic_stats_data_quick.csv', index=False)
 
     tp = int(merged_data["tp"].sum())
     fp = int(merged_data["fp"].sum())
@@ -142,9 +142,9 @@ def basic_analysis(data, plot):
                 "f1": f1}
 
     if plot:
-        plot_confusion(metrics, comparison = "UniProt") # may change to QuickGo
+        plot_confusion(metrics, comparison = "QuickGo") # may change to QuickGo
 
-basic_analysis('cleaned_data.csv', plot=True)
+basic_analysis('cleaned_data_quick.csv', plot=True)
 
 def basic_name_analysis(data):
     '''Calculate tp, fp, fn, and additional statistics for merged data seperated by namespace.
