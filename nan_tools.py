@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
-def plot_confusion(metrics, comparison):
+def plot_confusion(metrics, comparison, ax=None):
 
     green = "#c9e6b0"
     red = "#f2b6b0"
@@ -23,8 +23,10 @@ def plot_confusion(metrics, comparison):
     (1, 0, "False\nNegative", f"{fn:,}", red),
     (1, 1, "True\nNegative", "N/A", green)]
 
+    standalone = ax is None
+    if standalone:
+        fig, ax = plt.subplots(figsize=(6, 6))
 
-    fig, ax = plt.subplots(figsize=(6, 6))
     ax.set_xlim(0, 3.55)
     ax.set_ylim(0, 3.75)
     ax.set_aspect("equal")
@@ -90,10 +92,10 @@ def plot_confusion(metrics, comparison):
     ax.plot([left, left+2*cell_size], [top + 0.4, top + 0.4], color="black", linewidth=1)
     ax.plot([left - 0.4, left - 0.4], [top, top - 2*cell_size], color="black", linewidth=1)
 
-    plt.tight_layout()
-
-    plt.savefig(f"{comparison}_confusion.png", bbox_inches="tight")
-    plt.savefig(f"{comparison}_confusion.pdf", bbox_inches="tight")
+    if standalone:
+        plt.tight_layout()
+        plt.savefig(f"{comparison}_confusion.png", bbox_inches="tight")
+        plt.savefig(f"{comparison}_confusion.pdf", bbox_inches="tight")
 
 import os
 from collections import Counter
@@ -112,4 +114,28 @@ def find_missing():
     print(len(missing))
     print(f"Duplicates: {duplicates}")
 
-# find_missing()
+import pandas as pd
+
+def quick_vs_uni(quick_data, uni_data):
+    q_df = pd.read_csv(quick_data)
+    u_df = pd.read_csv(uni_data)
+
+    q_df = q_df.rename(columns={'go_terms': 'quick_terms'})
+    u_df = u_df.rename(columns={'go_terms': 'uni_terms'})
+    vs_data = pd.merge(u_df, q_df[['uniprot_id', 'quick_terms']], on='uniprot_id', how='left')
+    vs_data.to_csv('quick_vs_uni.csv', index=False)
+
+quick_vs_uni("quickgo.csv", "annotated_swissprotkb.csv")
+
+import pickle 
+with open("go_cache.pkl", "rb") as f:       # holds information about each go_term
+     cache = pickle.load(f)
+
+
+def go_term_lookup(go_id):
+    print(cache[go_id])
+
+# go_term_lookup("GO:0046686")
+
+
+       

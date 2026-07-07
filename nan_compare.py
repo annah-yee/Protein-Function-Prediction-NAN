@@ -142,11 +142,11 @@ def basic_analysis(data, plot):
                 "f1": f1}
 
     if plot:
-        plot_confusion(metrics, comparison = "QuickGo") # may change to QuickGo
+        plot_confusion(metrics, comparison = "QuickGo", ax=None) # may change to QuickGo
 
-basic_analysis('cleaned_data_quick.csv', plot=True)
+# basic_analysis('cleaned_data_quick.csv', plot=True)
 
-def basic_name_analysis(data):
+def basic_name_analysis(data, plot):
     '''Calculate tp, fp, fn, and additional statistics for merged data seperated by namespace.
         Show 3 confusion matrices.'''
 
@@ -154,15 +154,14 @@ def basic_name_analysis(data):
     stats = merged_data.progress_apply(basic_stats_namesplit, axis=1)
     merged_data = pd.concat([merged_data, stats], axis=1)
     
-    merged_data.to_csv('basic_namesplit_anew.csv', index=False)
+    # merged_data.to_csv('basic_namesplit_data.csv', index=False)
 
     namespaces = ["biological_process", "molecular_function", "cellular_component"]
     labels = ["BP", "MF", "CC"]
 
-    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
-    fig.suptitle("AlphaFunction Predictions by Namespace")
+    metrics = {}
 
-    for i, (namespace, label) in enumerate(zip(namespaces, labels)):
+    for (namespace, label) in zip(namespaces, labels):
         tp = int(merged_data[f"{namespace}_tp"].sum())
         fp = int(merged_data[f"{namespace}_fp"].sum())
         fn = int(merged_data[f"{namespace}_fn"].sum())
@@ -174,32 +173,25 @@ def basic_name_analysis(data):
         recall = recall_score(y_true, y_pred)
         f1 = f1_score(y_true, y_pred)
 
-        print(f"{namespace} precision: {precision:.4f}")
-        print(f"{namespace} recall: {recall:.4f}")
-        print(f"{namespace} f1: {f1:.4f}")
-        print()
-
-        # raw counts
-        con_raw = confusion_matrix(y_true, y_pred)
-        con_disp_raw = ConfusionMatrixDisplay(con_raw)
-        con_disp_raw.plot(ax=axes[0][i], values_format='d')
-        axes[0][i].set_title(f"{label} - Raw Counts")
-        axes[0][i].set_xlabel(f"AlphaFunctor Prediction \nP: {precision:.4f} | R: {recall:.4f} | F1: {f1:.4f}")
-        axes[0][i].set_ylabel("Uniprot Annotation")
+        metrics[label] = {"tp": tp, 
+                "fp": fp,
+                "fn": fn,
+                "precision": precision,
+                "recall": recall,
+                "f1": f1}
         
-        # normalized
-        con_norm = confusion_matrix(y_true, y_pred, normalize='all')
-        con_disp_norm = ConfusionMatrixDisplay(con_norm)
-        con_disp_norm.plot(ax=axes[1][i], values_format='.2f')
-        axes[1][i].set_title(f"{label} - Normalized")
-        axes[1][i].set_xlabel("AlphaFunctor Prediction")
-        axes[1][i].set_ylabel("UniProt Annotation")
+    if plot: 
+        fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+        plot_confusion(metrics["BP"], "BP UniProt", ax=axes[0])
+        plot_confusion(metrics["MF"], "MF UniProt", ax=axes[1])
+        plot_confusion(metrics["CC"], "CC UniProt", ax=axes[2])
+        plt.tight_layout()
+        plt.savefig("namesplit_confusion.png", bbox_inches="tight")
+        plt.savefig("namesplit_confusion.pdf", bbox_inches="tight")
+        plt.show()
 
-    plt.tight_layout(rect=[0, 0.08, 1, 0.95])
-    plt.savefig("basic_namesplit_stats2.png", bbox_inches="tight")
-    plt.show()
 
-# basic_name_analysis('basic_merged_anew.csv')
+# basic_name_analysis('cleaned_data.csv', plot=True)
 
 def basic_evidence_analysis(data):
     # would be deciding certain select set of evidence codes to focus on and creating different plots for each
@@ -414,7 +406,7 @@ def advanced_stats(row):
     return pd.Series(stats)
 
 
-def advanced_analysis(data, output_png="advanced.png"):
+def advanced_analysis(data, output_png="advanced_stats_data.png"):
     '''Complete analysis with hierarchical context and produce graps'''
 
     # input merged data, extract advanced stats and add to df
@@ -422,15 +414,20 @@ def advanced_analysis(data, output_png="advanced.png"):
     stats = merged_data.progress_apply(advanced_stats, axis=1)
     merged_data = pd.concat([merged_data, stats], axis=1)
 
-    merged_data.to_csv('anew_advanced_stats.csv', index=False)
+    merged_data.to_csv('advanced_stats_quick.csv', index=False)
 
-    fig = plt.figure(figsize=(20, 5))
-    gs = gridspec.GridSpec(1, 4) 
+    # merged_data = pd.read_csv("advanced_stats_data.csv")
 
-    ax_cmr = fig.add_subplot(gs[0, 0])   # raw confusion matrix
-    ax_cmn = fig.add_subplot(gs[0,1])    # normalized confusion matrix
-    ax_bar1 = fig.add_subplot(gs[0, 2])  # false positive bar chart
-    ax_bar2 = fig.add_subplot(gs[0, 3])  # false negative bar chart
+    fig = plt.figure(figsize=(10, 5))
+    gs = gridspec.GridSpec(1, 2) 
+
+    # ax_cmr = fig.add_subplot(gs[0, 0])   # raw confusion matrix
+    # ax_cmn = fig.add_subplot(gs[0,1])    # normalized confusion matrix
+    # ax_bar1 = fig.add_subplot(gs[0, 2])  # false positive bar chart
+    # ax_bar2 = fig.add_subplot(gs[0, 3])
+    
+    ax_bar1 = fig.add_subplot(gs[0, 0]) 
+    ax_bar2 = fig.add_subplot(gs[0, 1])  
 
     # making the general matrix 
 
@@ -442,23 +439,23 @@ def advanced_analysis(data, output_png="advanced.png"):
     y_pred = [1]*tp + [0]*fn + [1]*fp
 
     # raw confusion matrix
-    gen_raw = confusion_matrix(y_true, y_pred)
-    gen_disp_raw = ConfusionMatrixDisplay(gen_raw, display_labels=["Negative", "Positive"])
-    gen_disp_raw.plot(ax=ax_cmr, values_format='d')
-    ax_cmr.set_title("Raw Counts")
-    ax_cmr.set_xlabel("AlphaFunctor Prediction")
-    ax_cmr.set_ylabel("UniProt Annotation")
+    # gen_raw = confusion_matrix(y_true, y_pred)
+    # gen_disp_raw = ConfusionMatrixDisplay(gen_raw, display_labels=["Negative", "Positive"])
+    # gen_disp_raw.plot(ax=ax_cmr, values_format='d')
+    # ax_cmr.set_title("Raw Counts")
+    # ax_cmr.set_xlabel("AlphaFunctor Prediction")
+    # ax_cmr.set_ylabel("UniProt Annotation")
 
-    # normalized confusion matrix
-    gen_norm = confusion_matrix(y_true, y_pred, normalize='all')
-    gen_disp_norm = ConfusionMatrixDisplay(gen_norm, display_labels=["Negative", "Positive"])
-    gen_disp_norm.plot(ax=ax_cmn, values_format='.2f')
-    ax_cmn.set_title("Normalized")
-    ax_cmn.set_xlabel("AlphaFunctor Prediction")
-    ax_cmn.set_ylabel("UniProt Annotation")
+    # # normalized confusion matrix
+    # gen_norm = confusion_matrix(y_true, y_pred, normalize='all')
+    # gen_disp_norm = ConfusionMatrixDisplay(gen_norm, display_labels=["Negative", "Positive"])
+    # gen_disp_norm.plot(ax=ax_cmn, values_format='.2f')
+    # ax_cmn.set_title("Normalized")
+    # ax_cmn.set_xlabel("AlphaFunctor Prediction")
+    # ax_cmn.set_ylabel("UniProt Annotation")
 
-    # making the FP bar chart
-    # FP = these are terms that AlphaFunctor predicted that were not included in quick go
+    # # making the FP bar chart
+    # # FP = these are terms that AlphaFunctor predicted that were not included in quick go
     fp_categories = ["Sandwich", "Parent", "Child", "Unrelated"]
     fp_values = [
         int(merged_data["pred_sandwich"].sum()),    # quick didn't include a sandwich term
@@ -466,16 +463,20 @@ def advanced_analysis(data, output_png="advanced.png"):
         int(merged_data["pred_child"].sum()),       # quick didn't include a child term (interesting!)
         int(merged_data["pred_unrelated"].sum())    # quick didn't include any related terms
     ]
-    bars1 = ax_bar1.bar(fp_categories, fp_values)
-    ax_bar1.set_title("False Positive Breakdown")
-    ax_bar1.set_xlabel("Category")
-    ax_bar1.set_ylabel("Count")
-    for bar in bars1:
-        ax_bar1.text(bar.get_x() + bar.get_width()/2, bar.get_height(),
-                    f'{int(bar.get_height())}', ha='center', va='bottom')
+    # bars1 = ax_bar1.bar(fp_categories, fp_values)
+    # ax_bar1.set_title("False Positive Breakdown")
+    # ax_bar1.set_xlabel("Category")
+    # ax_bar1.set_ylabel("Count")
+    # for bar in bars1:
+    #     ax_bar1.text(bar.get_x() + bar.get_width()/2, bar.get_height(),
+    #                 f'{int(bar.get_height())}', ha='center', va='bottom')
 
-    # making the FN bar chart
-    # FN = these are terms that quick go included but AlphaFunctor missed
+    ax_bar1.pie(fp_values, labels=fp_categories, autopct='%1.1f%%', colors=["#c9e6b0","#f7d39d", "#b0d4f2", "#f2b6b0"])
+    ax_bar1.set_title("False Positive Breakdown")
+
+    
+    # # making the FN bar chart
+    # # FN = these are terms that quick go included but AlphaFunctor missed
     fn_categories = ["Sandwich", "Parent", "Child", "Unrelated"]
     fn_values = [
         int(merged_data["missed_sandwich"].sum()),  # prediction had parent and child of term
@@ -483,18 +484,22 @@ def advanced_analysis(data, output_png="advanced.png"):
         int(merged_data["missed_child"].sum()),     # prediction had parent of term
         int(merged_data["missed_unrelated"].sum())  # prediction didn't have any relatives of term
     ]
-    bars2 = ax_bar2.bar(fn_categories, fn_values)
+    # bars2 = ax_bar2.bar(fn_categories, fn_values)
+    # ax_bar2.set_title("False Negative Breakdown")
+    # ax_bar2.set_xlabel("Category")
+    # ax_bar2.set_ylabel("Count")
+    # for bar in bars2:
+    #     ax_bar2.text(bar.get_x() + bar.get_width()/2, bar.get_height(),
+    #                 f'{int(bar.get_height())}', ha='center', va='bottom')
+
+    ax_bar2.pie(fn_values, labels=fn_categories, autopct='%1.1f%%', colors=["#c9e6b0","#f7d39d", "#b0d4f2", "#f2b6b0"])
     ax_bar2.set_title("False Negative Breakdown")
-    ax_bar2.set_xlabel("Category")
-    ax_bar2.set_ylabel("Count")
-    for bar in bars2:
-        ax_bar2.text(bar.get_x() + bar.get_width()/2, bar.get_height(),
-                    f'{int(bar.get_height())}', ha='center', va='bottom')
 
     # plot and save
     plt.tight_layout()
     plt.savefig(output_png)
 
+advanced_analysis("cleaned_data_quick.csv", output_png="advanced_stats_data_quick.png")
 
 def advanced_analysis_namesplit():
     '''Complete advanced analysis on each namespace split data and generate graphs'''
