@@ -11,13 +11,12 @@ with open("go_cache.pkl", "rb") as f:
     cache = pickle.load(f)
 
 plt.rcParams.update({
-    'font.size': 20,
-    'axes.titlesize': 20,
-    'axes.labelsize': 20,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
+    'font.size': 24,
+    'axes.titlesize': 24,
+    'axes.labelsize': 24,
+    'xtick.labelsize': 20,
+    'ytick.labelsize': 20,
 })
-
 
 # would it make more sense to make just a thing of subplots with :
 # depth/level/Ufreq/Afreq vs P/R/f1 
@@ -116,6 +115,6 @@ def just_level():
                 # bbox=dict(facecolor="white", alpha=0.6, edgecolor="none", pad=1))
 
 
-    plt.savefig("LevelDensity_bright.png")
+    plt.savefig("LevelDensity_brightbig.png")
 
 just_level()
