@@ -11,11 +11,11 @@ from matplotlib.colors import LinearSegmentedColormap
 tqdm.pandas()
 
 plt.rcParams.update({
-    'font.size': 20,
-    'axes.titlesize': 20,
-    'axes.labelsize': 20,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
+    'font.size': 24,
+    'axes.titlesize': 24,
+    'axes.labelsize': 24,
+    'xtick.labelsize': 20,
+    'ytick.labelsize': 20,
 })
 
 
