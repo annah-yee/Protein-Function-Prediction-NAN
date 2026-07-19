@@ -6,6 +6,11 @@ Examples of my slurm scripts are included under `prediction_job.sb` and `combine
 Make sure the `condensed_swissprotkb.csv`, `prediction_job.sb`, `combine_job.sb`, `nan_prediction.py`, and `nan_combine.py` are in the HPCC working directory. 
 
 ## Submitting jobs
+Submit with
+```bash
+sbatch prediction_job.sb
+```
+
 When I ran this, I had around 6150 tasks with an HPCC limit of 1000 tasks per user. This means my initial submission was the task array 0 to 999. About twice a day, I ran these these commands to check on the progress.
 
 ```bash
@@ -64,4 +69,8 @@ In the event where tasks were accidentally ran twice, manually compare the outpu
 
 ## Combining outputs
 
+Once you've confirmed all of the outputs have been generated, combine with 
 
+```bash
+sbatch combine_job.sb
+```

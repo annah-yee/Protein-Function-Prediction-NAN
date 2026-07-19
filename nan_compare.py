@@ -62,26 +62,26 @@ def basic_stats(row):
     except (ValueError, SyntaxError):
         return pd.Series({"tp": 0, "fn": 0, "fp": 0, "len_quick": 0, "len_pred": 0})
     
-def basic_evidence_stats(row, evidence_codes):
-    '''Return basic stats per row, only considering select evidence codes'''
+# def basic_evidence_stats(row, evidence_codes):
+#     '''Return basic stats per row, only considering select evidence codes'''
 
-    try:
-        quick_set = set()
-        for code in evidence_codes:
-            add = ast.literal_eval(row[code])
-            quick_set.update(add)
+#     try:
+#         quick_set = set()
+#         for code in evidence_codes:
+#             add = ast.literal_eval(row[code])
+#             quick_set.update(add)
 
-        pred_set = set(ast.literal_eval(row["predictions"]))
+#         pred_set = set(ast.literal_eval(row["predictions"]))
 
-        return pd.Series({
-            "tp": len(quick_set & pred_set),
-            "fn": len(quick_set - pred_set),
-            "fp": len(pred_set - quick_set),
-            "len_quick": len(quick_set),
-            "len_pred": len(pred_set)
-        })
-    except (ValueError, SyntaxError):
-        return pd.Series({"tp": 0, "fn": 0, "fp": 0, "len_quick": 0, "len_pred": 0})
+#         return pd.Series({
+#             "tp": len(quick_set & pred_set),
+#             "fn": len(quick_set - pred_set),
+#             "fp": len(pred_set - quick_set),
+#             "len_quick": len(quick_set),
+#             "len_pred": len(pred_set)
+#         })
+#     except (ValueError, SyntaxError):
+#         return pd.Series({"tp": 0, "fn": 0, "fp": 0, "len_quick": 0, "len_pred": 0})
     
 
 def basic_stats_namesplit(row):
@@ -405,6 +405,13 @@ def advanced_stats(row):
 
     return pd.Series(stats)
 
+plt.rcParams.update({
+    'font.size': 20,
+    'axes.titlesize': 20,
+    'axes.labelsize': 20,
+    'xtick.labelsize': 14,
+    'ytick.labelsize': 14,
+})
 
 def advanced_analysis(data, output_png="advanced_stats_data.png"):
     '''Complete analysis with hierarchical context and produce graps'''
@@ -474,7 +481,7 @@ def advanced_analysis(data, output_png="advanced_stats_data.png"):
     ax_bar1.pie(fp_values, labels=fp_categories, autopct='%1.1f%%', colors=["#c9e6b0","#f7d39d", "#b0d4f2", "#f2b6b0"])
     ax_bar1.set_title("False Positive Breakdown")
 
-    
+
     # # making the FN bar chart
     # # FN = these are terms that quick go included but AlphaFunctor missed
     fn_categories = ["Sandwich", "Parent", "Child", "Unrelated"]
@@ -499,7 +506,7 @@ def advanced_analysis(data, output_png="advanced_stats_data.png"):
     plt.tight_layout()
     plt.savefig(output_png)
 
-advanced_analysis("cleaned_data_quick.csv", output_png="advanced_stats_data_quick.png")
+advanced_analysis("cleaned_data_quick.csv", output_png="advanced_stats_data_quick_big.png")
 
 def advanced_analysis_namesplit():
     '''Complete advanced analysis on each namespace split data and generate graphs'''

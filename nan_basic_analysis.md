@@ -20,29 +20,35 @@ import matplotlib.gridspec as gridspec
 from nan_tools import plot_confusion
 ```
 
+Also initialize the tqdm:
+```python
+tqdm.pandas()
+```
+
 ## Merge and clean the data
 
 ```python
-def merge():
+def merge(quick_data, prediction_data):
     '''Merges data from AlphaFunctor outputs and UniProt annotations'''
 
-    main_data = pd.read_csv("annotated_swissprotkb.csv", sep=',')
-    predictions = pd.read_csv("final_output.csv", sep=',')
+    main_data = pd.read_csv(quick_data, sep=',')
+    predictions = pd.read_csv(prediction_data, sep=',')
     merged_data = pd.merge(main_data, predictions[['uniprot_id', 'predictions']], on='uniprot_id', how='left')
-    merged_data.to_csv('merged_data.csv', index=False)
+    merged_data.to_csv('merged_data_quick.csv', index=False)
 ```
 
 ```python
-def clean_csv():
+def clean_csv(file):
     '''Remove all rows where prediction skipped, do this after merging'''
 
-    df = pd.read_csv('merged_data.csv')
+    df = pd.read_csv(file)
     df_clean = df[~df['predictions'].str.contains('SKIPPED:', case=False, na=False)]
     df_waste = df[df['predictions'].str.contains('SKIPPED:', case=False, na=False)]
-    df_clean.to_csv('cleaned_data.csv', index=False)
-    df_waste.to_csv('waste_data.csv', index=False)       # waste.csv to gather all proteins that got skipped
+    df_clean.to_csv('cleaned_data_quick.csv', index=False)
+    df_waste.to_csv('waste_data_quick.csv', index=False)       # waste.csv to gather all proteins that got skipped
 ```
 
+## Performing Analysis
 ```python
 def basic_stats(row):
     '''Return basic stats per row'''
