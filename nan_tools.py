@@ -136,7 +136,80 @@ print(len(cache))
 def go_term_lookup(go_id):
     print(cache[go_id])
 
-# go_term_lookup("GO:0046686")
+import matplotlib.gridspec as gridspec
+import numpy as np
+from adjustText import adjust_text
+
+def custom_pie(ax, values, categories, colors, title):
+    categories = [c.capitalize() for c in categories]
+    wedges, _ = ax.pie(values, colors=colors, startangle=0, counterclock=False)
+    ax.set_title(title, fontsize=24)
+
+    bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="gray", lw=0.8)
+
+    texts = []
+    for wedge, val, cat in zip(wedges, values, categories):
+        ang = (wedge.theta2 - wedge.theta1) / 2. + wedge.theta1
+        x = np.cos(np.deg2rad(ang)) * 1.3
+        y = np.sin(np.deg2rad(ang)) * 1.3
+        t = ax.text(x, y, f"{cat}\n{val:.1f}%", ha="center", va="center",
+                     fontsize=11, bbox=bbox_props)
+        texts.append(t)
+
+    # automatically nudges overlapping labels apart and draws leader lines
+    adjust_text(texts, ax=ax, arrowprops=dict(arrowstyle="-", color="gray", lw=0.8))
+    ax.set_xlim(-1.7, 1.7)
+    ax.set_ylim(-1.7, 1.7)
+
+    ax.set_title(title, fontsize=18)
+
+def custom_piecharts(fp,fn, comparison):
+
+        colors = ["#f2b6b0", "#b0d4f2","#f7d39d","#c9e6b0" ]
+
+        fig = plt.figure(figsize=(10, 5))
+        gs = gridspec.GridSpec(1, 2) 
+
+        ax_pie1 = fig.add_subplot(gs[0, 0]) 
+        ax_pie2 = fig.add_subplot(gs[0, 1])  
+
+        fp_categories = list(fp.keys())
+        fp_values = list(fp.values())
+
+        fn_categories = list(fn.keys())
+        fn_values = list(fn.values())
+
+        custom_pie(ax_pie1, fp_values, fp_categories, colors, "False Positive Breakdown")
+        custom_pie(ax_pie2, fn_values, fn_categories, colors, "False Negative Breakdown")
+
+        fig.suptitle(f"{comparison} Database Error Categories", fontsize=20, y=1.02)
+
+        plt.tight_layout()
+
+        # fix this title ugh,, it needs to be title over the whole image
+        # plt.title(f"{comparison} Dataset")
+
+        plt.savefig(f"{comparison}_pies.png", bbox_inches="tight")
 
 
-       
+
+fp_uni = {'Unrelated': 81.3,
+          'Child': 7.5,
+          'Parent': 10.7,
+          'Sandwich': 0.5}
+fn_uni ={'Unrelated': 80.7,
+          'Child': 8.8,
+          'Parent': 9.8,
+          'Sandwich': 0.7}
+
+fp_quick ={'Unrelated': 83.1,
+          'Child': 12.4,
+          'Parent': 3.6,
+          'Sandwich': 1}
+fn_quick = {'Unrelated': 49.9,
+          'Child': 4.6,
+          'Parent': 45,
+          'Sandwich': 0.5}
+
+custom_piecharts(fp_uni,fn_uni, 'Uniprot')
+custom_piecharts(fp_quick,fn_quick, 'Quick')
