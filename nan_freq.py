@@ -92,17 +92,24 @@ def pr_main():
     stats = df.progress_apply(retrieve, axis=1)
     together = pd.concat([df, stats], axis=1)
 
-    precision_vec, recall_vec, quick_count_vec, pred_count_vec, f1_vec = seek(together)
+    precision_vec, recall_vec, quick_vec, pred_vec, f1_vec = seek(together)
+
+    pred_arr = np.array(pred_vec)
+    mask = pred_arr != 0
+    recall_arr = np.array(recall_vec)
+    precision_arr = np.array(precision_vec)
+    recall_arr = recall_arr[mask]
+    precision_arr = precision_arr[mask]
     
     fig, ax = plt.subplots(figsize=(10,9))
-    hb = ax.hexbin(recall_vec, precision_vec, gridsize=20, mincnt=1, bins="log")
+    hb = ax.hexbin(recall_arr, precision_arr, gridsize=20, mincnt=1, bins="log")
 
     plt.colorbar(hb, ax=ax, label="count")
     ax.set_xlabel('Recall')
     ax.set_ylabel('Precision')
     ax.set_title('Precision-Recall Density')
     plt.tight_layout()
-    plt.savefig("PRDensity_big.png")
+    plt.savefig("PRDensity_nonzero.png")
 
 pr_main()
 
@@ -116,17 +123,24 @@ def freq_main():
 
     precision_vec, recall_vec, quick_vec, pred_vec, f1_vec = seek(together)
 
+    # mask out ones that are never predicted
+    pred_arr = np.array(pred_vec)
+    f1_arr = np.array(f1_vec)
+    mask = pred_arr != 0
+    pred_arr = pred_arr[mask]
+    f1_arr = f1_arr[mask]
+
     fig, ax = plt.subplots(figsize=(10, 9))
 
     # prediction frequency vs f1
 
-    phb = ax.hexbin(np.log10(np.array(pred_vec) + 1), f1_vec, gridsize=50, mincnt=1, bins='log')
+    phb = ax.hexbin(np.log10(pred_arr + 1), f1_arr, gridsize=50, mincnt=1, bins='log')
     ax.set_xlabel('log10(AlphaFunctor Prediction Frequency)')
     plt.colorbar(phb, ax=ax, label="count")
     ax.set_ylabel('F1 Value')
     ax.set_title('AlphaFunctor Prediction Frequency vs F1')
 
     plt.tight_layout()
-    plt.savefig("FreqDensity_big.png")
+    plt.savefig("FreqDensity_nonzero.png")
 
 freq_main()

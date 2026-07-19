@@ -8,11 +8,9 @@ import pickle
 
 
 def create_DAG():
-
-    cache = {}
-
     godag = GODag("go-basic.obo")
     cache = {}
+
     for go_id, term in godag.items():
         cache[go_id] = {
             "name": term.name,

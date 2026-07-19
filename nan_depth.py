@@ -5,7 +5,6 @@ from tqdm import tqdm
 import ast
 import sklearn as sk
 from collections import Counter
-from goatools.obo_parser import GODag
 import seaborn as sns
 
 with open("go_cache.pkl", "rb") as f:
@@ -112,10 +111,11 @@ def just_level():
         y_pos = q1 + 0.09
         pct = level_pct.get(cat, 0)
         ax.text(i, y_pos, f"{pct:.3f}%",
-                ha="center", va="center", fontsize=14, color="black", fontweight="bold",
+                ha="center", va="center", fontsize=14, color="white", fontweight="bold",
                 rotation=90)
                 # bbox=dict(facecolor="white", alpha=0.6, edgecolor="none", pad=1))
 
 
     plt.savefig("LevelDensity_bright.png")
 
+just_level()
