@@ -125,12 +125,13 @@ def quick_vs_uni(quick_data, uni_data):
     vs_data = pd.merge(u_df, q_df[['uniprot_id', 'quick_terms']], on='uniprot_id', how='left')
     vs_data.to_csv('quick_vs_uni.csv', index=False)
 
-quick_vs_uni("quickgo.csv", "annotated_swissprotkb.csv")
+# quick_vs_uni("quickgo.csv", "annotated_swissprotkb.csv")
 
 import pickle 
 with open("go_cache.pkl", "rb") as f:       # holds information about each go_term
      cache = pickle.load(f)
 
+print(len(cache))
 
 def go_term_lookup(go_id):
     print(cache[go_id])
